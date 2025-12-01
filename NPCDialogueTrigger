@@ -1,0 +1,51 @@
+using UnityEngine;
+
+public class NPCDialogueTrigger : MonoBehaviour
+{
+    
+    [TextArea(2, 5)]
+    public string[] dialogueLines; // Set per NPC in Inspector
+
+    private DialogueManager dialogueManager;
+    private bool hasTriggered = false;
+    
+    private Move playerMove;
+    private PlayerFire playerFire;
+    private Jump jump;
+ //   private PlayerController playerController; // Only if jump is handled here
+
+    private void Start()
+    {
+       
+        dialogueManager = FindObjectOfType<DialogueManager>();
+
+        // Cache references once
+        playerMove = FindObjectOfType<Move>();
+        playerFire = FindObjectOfType<PlayerFire>();
+ 
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (hasTriggered) return;
+       
+        if (collision.CompareTag("Player"))
+        {
+            hasTriggered = true;
+
+            // STOP ALL PLAYER INPUT
+
+           
+            if (playerMove != null) playerMove.enabled = false;
+            if (playerFire != null) playerFire.enabled = false;
+           if (jump != null) jump.enabled = false;
+            
+
+            //  START DIALOGUE
+            dialogueManager.StartDialogue(dialogueLines);
+        
+        
+        
+        }
+    }
+}
