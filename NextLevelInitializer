@@ -1,0 +1,22 @@
+using UnityEngine;
+
+public class NextLevelInitializer : MonoBehaviour
+{
+    void Start()
+    {
+        var result = ScoringManager.Instance.FinalizeScore();
+
+       
+        RewardManager.Instance.StoreReward(result.rank);
+
+
+
+        if (RewardManager.Instance != null)
+        {
+            RewardManager.Instance.bonusReward = "None";
+            RewardManager.Instance.earnedRank = "";
+        }
+
+        Debug.Log("RewardManager reset for new level.");
+    }
+}
