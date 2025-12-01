@@ -1,0 +1,132 @@
+using UnityEngine;
+
+public class ScoringManager : MonoBehaviour
+{
+    public static ScoringManager Instance;
+
+    [Header("Score Values")]
+    public float maxLevelTime = 180f;
+
+    [Tooltip("You get full stealth score if detections <= this value.")]
+    public int idealDetections = 0;
+
+    [Tooltip("Maximum detections before stealth score hits 0.")]
+    public int maxDetectionsAllowed = 5;
+
+    [Tooltip("You get full weapon score if shots <= this value.")]
+    public int idealShots = 0;
+
+    [Tooltip("Maximum shots before weapon score hits 0.")]
+    public int maxShotsAllowed = 25;
+
+    [Header("Live Debug (Read Only)")]
+    public float levelTimer = 0f;
+    public int shotsFired = 0;
+    public int detections = 0;
+
+    private bool levelActive = true;
+
+    void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
+
+    void Update()
+    {
+        if (levelActive)
+            levelTimer += Time.deltaTime;
+    }
+
+    // --- CALLED BY PLAYER FIRE ---
+    public void RegisterShot()
+    {
+        shotsFired++;
+    }
+
+    // --- CALLED BY ENEMY WHEN PLAYER IS DETECTED ---
+    public void RegisterDetection()
+    {
+        detections++;
+    }
+
+    // --- NEW FRIENDLY SCORING CURVES ---
+    private float ScoreTime()
+    {
+        // Full score if <= 50% of max time — slowly decays after
+        return Mathf.Clamp01(1f - (levelTimer - (maxLevelTime * 0.5f)) / (maxLevelTime * 0.5f));
+    }
+
+    private float ScoreDetections()
+    {
+        if (detections <= idealDetections)
+            return 1f;
+
+        return Mathf.Clamp01(1f - (detections - idealDetections) / (float)maxDetectionsAllowed);
+    }
+
+    private float ScoreShots()
+    {
+        if (shotsFired <= idealShots)
+            return 1f;
+
+        return Mathf.Clamp01(1f - (shotsFired - idealShots) / (float)maxShotsAllowed);
+    }
+
+    // --- CALLED WHEN PLAYER REACHES EXIT ---
+    public LevelScoreResult FinalizeScore()
+    {
+        levelActive = false;
+
+        float timeScore = ScoreTime();
+        float stealthScore = ScoreDetections();
+        float weaponScore = ScoreShots();
+
+        float finalScore =
+            (timeScore * 0.40f) +
+            (stealthScore * 0.40f) +
+            (weaponScore * 0.20f);
+
+        finalScore *= 100f;
+
+        string rank = GetRank(finalScore);
+        string reward = GetReward(rank);
+
+        return new LevelScoreResult(finalScore, rank, reward);
+    }
+
+    private string GetRank(float score)
+    {
+        if (score >= 95) return "S";
+        if (score >= 85) return "A";
+        if (score >= 70) return "B";
+        if (score >= 50) return "C";
+        return "D";
+    }
+
+    private string GetReward(string rank)
+    {
+        switch (rank)
+        {
+            case "S": return "Panic Cloak, Press Letter O to Cloak";
+            case "A": return "EMP";
+            case "B": return "Small ammo bonus next mission.";
+            default: return "No reward.";
+        }
+    }
+}
+
+public struct LevelScoreResult
+{
+    public float score;
+    public string rank;
+    public string reward;
+
+    public LevelScoreResult(float s, string r, string rw)
+    {
+        score = s;
+        rank = r;
+        reward = rw;
+    }
+}
+
+
