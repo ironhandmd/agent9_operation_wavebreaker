@@ -1,0 +1,113 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using TMPro;
+using System.Collections;
+
+public class GameOverManager : MonoBehaviour
+{
+    [Header("UI References")]
+    public CanvasGroup fadePanel;            // Fullscreen black CanvasGroup
+    public TextMeshProUGUI missionFailedTMP; // "MISSION FAILED"
+    public TextMeshProUGUI pressAnyKeyTMP;   // "Press any key to retry"
+
+    [Header("Settings")]
+    public float fadeDuration;
+    public float delayBeforeMessage;
+
+    private bool waitingForInput = false;
+    private bool gameOverTriggered = false;
+
+    private scene_controller sceneController;
+
+    void Start()
+    {
+        if (fadePanel != null)
+            fadePanel.alpha = 0f;
+
+        if (missionFailedTMP != null)
+            missionFailedTMP.gameObject.SetActive(false);
+
+        if (pressAnyKeyTMP != null)
+            pressAnyKeyTMP.gameObject.SetActive(false);
+
+        sceneController = FindObjectOfType<scene_controller>();
+    }
+
+    public void TriggerGameOver()
+    {
+        if (gameOverTriggered) return;
+        gameOverTriggered = true;
+        StartCoroutine(GameOverSequence());
+    }
+
+    private IEnumerator GameOverSequence()
+    {
+        Debug.Log("Mission Failed — starting fade...");
+
+        
+        if (fadePanel != null)
+        {
+            float t = 0;
+            while (t < fadeDuration)
+            {
+                t += Time.deltaTime;
+                fadePanel.alpha = Mathf.Lerp(0f, 1f, t / fadeDuration);
+                yield return null;
+            }
+            fadePanel.alpha = 1f;
+        }
+
+      
+        if (missionFailedTMP != null)
+        {
+            missionFailedTMP.gameObject.SetActive(true);
+            missionFailedTMP.text = "MISSION FAILED";
+        }
+
+        yield return new WaitForSeconds(delayBeforeMessage);
+
+     
+        if (pressAnyKeyTMP != null)
+        {
+            pressAnyKeyTMP.gameObject.SetActive(true);
+            pressAnyKeyTMP.text = "Press any key to try again...";
+        }
+
+        waitingForInput = true;
+    }
+
+    void Update()
+    {
+        if (waitingForInput && Input.anyKeyDown)
+        {
+            waitingForInput = false;
+            StartCoroutine(RestartSequence());
+        }
+    }
+
+    private IEnumerator RestartSequence()
+    {
+        Debug.Log("Restarting scene...");
+
+       
+        float t = 0;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            fadePanel.alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
+            yield return null;
+        }
+
+        fadePanel.alpha = 0f;
+
+     
+        if (sceneController != null)
+            sceneController.reLoadScene();
+        else
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+}
+
+
+
+
