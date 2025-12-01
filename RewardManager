@@ -1,0 +1,43 @@
+using UnityEngine;
+
+public class RewardManager : MonoBehaviour
+{
+    public static RewardManager Instance;
+
+    public string earnedRank;
+    public string bonusReward;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else Destroy(gameObject);
+    }
+
+    public void StoreReward(string rank)
+    {
+        earnedRank = rank;
+
+        switch (rank)
+        {
+            case "S":
+                bonusReward = "PanicCloak";
+                break;
+
+            case "A":
+                bonusReward = "ShockTrap";
+                break;
+
+            case "B":
+                bonusReward = "SmallAmmo";
+                break;
+
+            default:
+                bonusReward = "None";
+                break;
+        }
+    }
+}
