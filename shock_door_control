@@ -1,0 +1,52 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+public class shock_door_control : MonoBehaviour
+{
+    public bool hasRemote;
+    public Image remote;
+    [SerializeField] GameObject _shockDoor;
+  
+    void Start()
+    {
+        remote.enabled = false;
+        hasRemote = false;
+    }
+
+    public void removeShockDoor() 
+    {
+        
+            Destroy(_shockDoor);
+        
+    }
+
+    public void getRemote()
+    {
+        Debug.Log("remote_taken");
+        hasRemote = true;
+        remote.enabled = true;
+    }
+
+    public void remoteUsed()
+    {
+       // hasRemote = false;
+        remote.enabled = false;
+    
+    }
+
+    void OnTriggerEnter2D() 
+    {
+        if (hasRemote == true) 
+        {
+            
+            removeShockDoor();
+            remoteUsed();
+        
+        }
+    
+    }
+
+
+
+}
