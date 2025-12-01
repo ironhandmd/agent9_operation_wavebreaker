@@ -1,0 +1,219 @@
+
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using TMPro;
+public class MissionDoneController : MonoBehaviour
+{
+
+    ScoringManager SM;
+    scene_controller SC;
+    [Header("UI References")]
+    public CanvasGroup fadePanel;           
+    public TextMeshProUGUI missionDoneTMP; 
+    public TextMeshProUGUI pressAnyKeyTMP;   
+
+    [Header("Settings")]
+    public float fadeDuration;
+    public float delayBeforeMessage;
+
+    private bool waitingForInput = false;
+    private bool gameOverTriggered = false;
+
+    private scene_controller sceneController;
+
+    public LevelEndUI levelEndUI;
+
+ 
+
+
+
+
+
+
+    void Start()
+    {
+      
+        if (fadePanel != null)
+            fadePanel.alpha = 0f;
+
+        if (missionDoneTMP != null)
+            missionDoneTMP.gameObject.SetActive(false);
+
+        if (pressAnyKeyTMP != null)
+            pressAnyKeyTMP.gameObject.SetActive(false);
+        SM = FindObjectOfType<ScoringManager>();
+        sceneController = FindObjectOfType<scene_controller>();
+    }
+
+  
+
+
+    public void SkipTheLevel() 
+    {
+       
+        StartCoroutine(loadSkipLevelSequence());
+     
+    
+    }
+
+
+
+    public void TriggerMissionDone()
+    {
+
+     
+ 
+        LevelScoreResult result = ScoringManager.Instance.FinalizeScore(); 
+  
+       SM.FinalizeScore();
+       
+        StartCoroutine(NextLevelSequence());
+    }
+    private IEnumerator NextLevelSequence()
+    {
+        Debug.Log("Mission Failed — starting fade...");
+
+        
+        if (fadePanel != null)
+        {
+            float t = 0;
+            while (t < fadeDuration)
+            {
+                t += Time.deltaTime;
+                fadePanel.alpha = Mathf.Lerp(0f, 1f, t / fadeDuration);
+                yield return null;
+            }
+            fadePanel.alpha = 1f;
+        }
+
+        
+        if (missionDoneTMP != null)
+        {
+
+         
+     
+            LevelScoreResult result = ScoringManager.Instance.FinalizeScore();
+            levelEndUI.ShowResults(result);
+
+            missionDoneTMP.gameObject.SetActive(true);
+            missionDoneTMP.text = "MISSION ACCOMPLISHED";
+         
+        }
+
+        yield return new WaitForSeconds(delayBeforeMessage);
+
+    
+        if (pressAnyKeyTMP != null)
+        {
+            pressAnyKeyTMP.gameObject.SetActive(true);
+            pressAnyKeyTMP.text = "Press any key to continue..";
+        }
+
+        waitingForInput = true;
+    }
+
+
+    
+
+
+
+
+
+
+
+
+    void Update()
+    {
+        if (waitingForInput && Input.anyKeyDown)
+        {
+            waitingForInput = false;
+            
+            StartCoroutine(loadNextLevelSequence());
+        }
+    }
+
+    private IEnumerator loadNextLevelSequence()
+    {
+      
+        float t = 0;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            fadePanel.alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
+            yield return null;
+        }
+
+        fadePanel.alpha = 0f;
+
+       
+        if (sceneController != null)
+            sceneController.LoadNextScene();
+     
+    }
+
+
+    private IEnumerator loadSkipLevelSequence()
+    {
+       
+       
+
+      
+        float t = 0;
+        while (t < fadeDuration)
+        {
+            t += Time.deltaTime;
+            fadePanel.alpha = Mathf.Lerp(1f, 0f, t / fadeDuration);
+            yield return null;
+        }
+
+        fadePanel.alpha = 0f;
+
+        if (missionDoneTMP != null)
+        {
+
+
+          
+            LevelScoreResult result = ScoringManager.Instance.FinalizeScore();
+            levelEndUI.ShowResults(result);
+
+            missionDoneTMP.gameObject.SetActive(true);
+            missionDoneTMP.text = "MISSION ACCOMPLISHED";
+
+        }
+
+        yield return new WaitForSeconds(delayBeforeMessage);
+
+     
+        if (pressAnyKeyTMP != null)
+        {
+            pressAnyKeyTMP.gameObject.SetActive(true);
+            pressAnyKeyTMP.text = "Press any key to continue..";
+        }
+
+        waitingForInput = true;
+
+
+     
+        if (sceneController != null)
+            sceneController.skipLevel();
+       
+    }
+
+
+
+
+
+    private IEnumerator StartFadeAfterDelay(float wait)
+    {
+        yield return new WaitForSeconds(wait);
+        StartCoroutine(NextLevelSequence());
+    }
+
+  
+
+
+
+}
+
